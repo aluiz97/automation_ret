@@ -1,5 +1,6 @@
 import requests
 import json
+import base64
 
 def make_request(url, auth, data):
     headers = {"Authorization": f"Basic {auth}"}
@@ -12,18 +13,21 @@ endpoint = "https://exemplo.com/api/dados"
 # Exemplo de autenticação básica (substitua com suas credenciais)
 username = "usuario"
 password = "senha"
-auth = f"{username}:{password}".encode("utf-8").b64encode()
+auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
 
-# Ler os dados do arquivo TXT
-with open("dados.txt", "r") as file:
-    json_list = [json.loads(json_str) for json_str in file.read().split("\n\n")]
+# Ler os dados do arquivo TXT e converter para string
+with open("dados.txt", "rb") as file:
+    json_data = file.read().decode("utf-8")
+
+# Separar os dados JSON individualmente e carregar para a lista
+json_list = [json.loads(chunk) for chunk in json_data.strip().split("\n\n")]
 
 # Realizar as requisições para cada JSON
 for idx, json_data in enumerate(json_list, start=1):
     response = make_request(endpoint, auth, json_data)
 
     # Salvar o retorno em um arquivo TXT
-    with open(f"retorno_{idx}.txt", "w") as file:
+    with open(f"retorno_{idx}.txt", "w", encoding="utf-8") as file:
         file.write(response.text)
 
     print(f"Retorno {idx} salvo com sucesso.")
